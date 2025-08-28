@@ -10,9 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-        }
+        body { font-family: 'Noto Sans KR', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -64,16 +62,15 @@
                     <h2 class="text-xl font-semibold text-gray-800 mb-4">미리보기 및 결과</h2>
                     
                     <!-- Preview Container -->
-                    <div class="border border-gray-300 rounded-lg mb-4 bg-gray-50" id="previewContainer" style="min-height: 384px;">
+                    <div class="border border-gray-300 rounded-lg mb-4 bg-gray-50" style="min-height: 384px;">
                         <div class="p-4 text-gray-500 text-center h-96 flex items-center justify-center" id="previewPlaceholder">
                             HTML 코드를 입력하고 변환 버튼을 클릭하세요
                         </div>
-                        <div id="previewContent" style="display: none; max-width: 100%; overflow: auto;"></div>
+                        <div id="previewContent" style="display: none; padding: 16px;"></div>
                     </div>
 
                     <!-- Download Section -->
                     <div id="downloadSection" class="hidden">
-                        <canvas id="outputCanvas" style="display: none;"></canvas>
                         <div class="text-center">
                             <button 
                                 id="downloadBtn"
@@ -92,17 +89,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Instructions -->
-        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">사용법</h3>
-            <ol class="list-decimal list-inside space-y-2 text-gray-600">
-                <li>왼쪽 텍스트 영역에 HTML 코드를 붙여넣습니다</li>
-                <li>"테스트 HTML 로드" 버튼으로 샘플 코드를 확인할 수 있습니다</li>
-                <li>"PNG로 변환" 버튼을 클릭합니다</li>
-                <li>미리보기에서 결과를 확인하고 "PNG 다운로드" 버튼을 클릭합니다</li>
-            </ol>
-        </div>
     </div>
 
     <script>
@@ -112,91 +98,28 @@
         const clearBtn = document.getElementById('clearBtn');
         const convertBtn = document.getElementById('convertBtn');
         const downloadBtn = document.getElementById('downloadBtn');
-        const previewContainer = document.getElementById('previewContainer');
         const previewPlaceholder = document.getElementById('previewPlaceholder');
         const previewContent = document.getElementById('previewContent');
         const downloadSection = document.getElementById('downloadSection');
         const loadingIndicator = document.getElementById('loadingIndicator');
-        const outputCanvas = document.getElementById('outputCanvas');
 
-        // Test HTML content
-        const testHtmlContent = `<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>규칙적인 운동의 중요성</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-    <!-- Slide Container -->
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl aspect-[16/9] p-8 sm:p-12 flex flex-col overflow-hidden">
-        
-        <!-- Header -->
-        <header class="text-center mb-6">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 tracking-tight">규칙적인 운동의 중요성</h1>
-            <p class="mt-2 text-lg sm:text-xl text-slate-500">건강한 삶을 위한 최고의 투자</p>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-grow flex flex-col md:flex-row gap-8 items-center">
-            <!-- Image Section -->
-            <div class="w-full md:w-1/2 h-64 md:h-full">
-                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop" 
-                     alt="공원에서 요가하는 여성" 
-                     class="w-full h-full object-cover rounded-xl shadow-md"
-                     onerror="this.onerror=null;this.src='https://placehold.co/600x400/a7f3d0/1e293b?text=Healthy+Life';">
-            </div>
-
-            <!-- Text Content Section -->
-            <div class="w-full md:w-1/2 space-y-6">
-                <!-- Physical Health -->
-                <div>
-                    <h2 class="text-2xl font-bold text-emerald-600 flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        신체적 건강 증진
-                    </h2>
-                    <ul class="mt-3 list-inside list-disc text-slate-600 space-y-2 text-base sm:text-lg">
-                        <li><span class="font-semibold">체중 관리</span> 및 비만 예방</li>
-                        <li><span class="font-semibold">심혈관 기능 강화</span> (성인병 위험 감소)</li>
-                        <li><span class="font-semibold">면역력 향상</span>으로 질병 예방</li>
-                    </ul>
-                </div>
-                <!-- Mental Health -->
-                <div>
-                    <h2 class="text-2xl font-bold text-sky-600 flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7"><path d="M12 2a5.5 5.5 0 0 1 5.5 5.5c0 1.63-1.1 3-2.63 3.42a5.5 5.5 0 0 1-8.74 0C4.6 10.5 3.5 9.13 3.5 7.5A5.5 5.5 0 0 1 9 2a3.5 3.5 0 0 1 3 1.02A3.5 3.5 0 0 1 15 2z"></path><path d="M12 11.42c-2.22 0-4.33.6-6 1.68a5.5 5.5 0 0 0-3 5.9V22h18v-2.9a5.5 5.5 0 0 0-3-5.9c-1.67-1.08-3.78-1.68-6-1.68z"></path></svg>
-                        정신적 건강 증진
-                    </h2>
-                    <ul class="mt-3 list-inside list-disc text-slate-600 space-y-2 text-base sm:text-lg">
-                        <li><span class="font-semibold">스트레스 해소</span> 및 긍정적 기분 전환</li>
-                        <li>우울감 및 불안감 감소</li>
-                        <li>성취감을 통한 <span class="font-semibold">자신감 향상</span></li>
-                    </ul>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="mt-auto pt-6 text-center">
-            <p class="text-lg italic text-slate-500">"오늘의 작은 움직임이 내일의 건강한 나를 만듭니다."</p>
-        </footer>
-
+        // Sample HTML content
+        const sampleHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; border-radius: 10px; max-width: 500px;">
+    <h1 style="color: #333; text-align: center;">안녕하세요!</h1>
+    <p style="color: #666; line-height: 1.6;">이것은 HTML to PNG 변환기 테스트용 샘플입니다.</p>
+    <div style="background: #fff; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #007bff;">
+        <strong>특징:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>간단한 HTML 코드 입력</li>
+            <li>실시간 미리보기</li>
+            <li>고품질 PNG 변환</li>
+        </ul>
     </div>
-</body>
-</html>`;
+</div>`;
 
         // Load test HTML
         loadTestBtn.addEventListener('click', () => {
-            htmlInput.value = testHtmlContent;
+            htmlInput.value = sampleHtml;
         });
 
         // Clear input
@@ -217,14 +140,16 @@
 
         // Download PNG
         downloadBtn.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.download = 'converted-html.png';
-            link.href = outputCanvas.toDataURL();
-            link.click();
+            html2canvas(previewContent).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'html-converted.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
         });
 
         function resetPreview() {
-            previewPlaceholder.style.display = 'block';
+            previewPlaceholder.style.display = 'flex';
             previewContent.style.display = 'none';
             downloadSection.classList.add('hidden');
             loadingIndicator.classList.add('hidden');
@@ -236,60 +161,21 @@
                 loadingIndicator.classList.remove('hidden');
                 downloadSection.classList.add('hidden');
 
-                // Create a temporary iframe for rendering
-                const iframe = document.createElement('iframe');
-                iframe.style.position = 'absolute';
-                iframe.style.left = '-9999px';
-                iframe.style.width = '1200px';
-                iframe.style.height = '800px';
-                iframe.style.border = 'none';
-                document.body.appendChild(iframe);
-
-                // Write HTML to iframe
-                iframe.contentDocument.open();
-                iframe.contentDocument.write(htmlCode);
-                iframe.contentDocument.close();
-
-                // Wait for iframe to load completely
-                await new Promise(resolve => {
-                    iframe.onload = resolve;
-                    setTimeout(resolve, 1000); // fallback timeout
-                });
-
-                // Show preview in main area
+                // Show preview
                 previewPlaceholder.style.display = 'none';
                 previewContent.style.display = 'block';
                 previewContent.innerHTML = htmlCode;
 
-                // Wait a bit more for fonts and images
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Wait for rendering
+                await new Promise(resolve => setTimeout(resolve, 1000));
 
-                // Create canvas from the iframe content
-                const canvas = await html2canvas(iframe.contentDocument.body, {
-                    useCORS: true,
-                    allowTaint: true,
-                    scale: 1,
-                    backgroundColor: '#ffffff',
-                    width: 1200,
-                    height: iframe.contentDocument.body.scrollHeight
-                });
-
-                // Clean up iframe
-                document.body.removeChild(iframe);
-
-                // Set the output canvas
-                outputCanvas.width = canvas.width;
-                outputCanvas.height = canvas.height;
-                const ctx = outputCanvas.getContext('2d');
-                ctx.drawImage(canvas, 0, 0);
-
-                // Show download section
+                // Show download button
                 loadingIndicator.classList.add('hidden');
                 downloadSection.classList.remove('hidden');
 
             } catch (error) {
                 console.error('변환 중 오류 발생:', error);
-                alert('변환 중 오류가 발생했습니다. HTML 코드를 확인해주세요.');
+                alert('변환 중 오류가 발생했습니다: ' + error.message);
                 loadingIndicator.classList.add('hidden');
             }
         }
