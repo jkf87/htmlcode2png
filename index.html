@@ -3,208 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML to PNG 변환기</title>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <title>HTML to PNG Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Noto Sans KR', sans-serif;
         }
-        
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .code-editor {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        
-        .row {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .col {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        textarea {
-            width: 100%;
-            height: 300px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 14px;
-            resize: vertical;
-        }
-        
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 5px 10px 0;
-        }
-        
-        button:hover {
-            background: #0056b3;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-        }
-        
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        
-        .btn-success {
-            background: #28a745;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        #preview {
-            border: 1px solid #ddd;
-            padding: 20px;
-            min-height: 300px;
-            background: white;
-            border-radius: 5px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
+        #renderTarget {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            visibility: hidden;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>HTML to PNG 변환기</h1>
-        
-        <div class="row">
-            <div class="col">
-                <h3>HTML 코드 입력</h3>
-                <textarea id="htmlCode" placeholder="여기에 HTML 코드를 붙여넣으세요..."></textarea>
-                <br>
-                <button onclick="loadSample()">샘플 로드</button>
-                <button onclick="clearCode()" class="btn-danger">지우기</button>
-                <button onclick="convertToPNG()">PNG로 변환</button>
-            </div>
-            
-            <div class="col">
-                <h3>미리보기</h3>
-                <div id="preview">
-                    <p style="text-align: center; color: #999; margin-top: 100px;">
-                        HTML 코드를 입력하고 'PNG로 변환'을 클릭하세요
-                    </p>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">HTML to PNG Converter</h1>
+            <p class="text-gray-600">HTML 코드를 붙여넣어 PNG 이미지로 변환하세요</p>
+        </header>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">HTML 코드 입력</h2>
+                    <button id="loadTestBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+                        테스트 코드 로드
+                    </button>
                 </div>
-                <div id="loading" class="loading hidden">변환 중...</div>
-                <button id="downloadBtn" onclick="downloadPNG()" class="btn-success hidden">PNG 다운로드</button>
+                <textarea 
+                    id="htmlInput" 
+                    placeholder="여기에 HTML 코드를 붙여넣으세요..."
+                    class="w-full h-96 p-4 border border-gray-300 rounded-md code-editor text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+                
+                <div class="mt-4 space-y-4">
+                    <!-- Conversion Options -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">너비 (px)</label>
+                            <input 
+                                type="number" 
+                                id="widthInput" 
+                                value="1200" 
+                                min="400"
+                                max="2400"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">화질</label>
+                            <select id="qualitySelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="1">기본 (1x)</option>
+                                <option value="2" selected>고화질 (2x)</option>
+                                <option value="3">최고화질 (3x)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        id="convertBtn" 
+                        class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        PNG로 변환하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">미리보기 및 다운로드</h2>
+                
+                <!-- Loading indicator -->
+                <div id="loading" class="hidden text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                    <p class="mt-2 text-gray-600">변환 중... 잠시만 기다려주세요</p>
+                </div>
+
+                <!-- Preview iframe -->
+                <div id="previewContainer" class="border border-gray-300 rounded-md mb-4 overflow-hidden">
+                    <iframe 
+                        id="previewFrame" 
+                        class="w-full h-96 border-0" 
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-modals"
+                    ></iframe>
+                </div>
+
+                <!-- Download section -->
+                <div id="downloadSection" class="hidden">
+                    <div class="space-y-3">
+                        <button 
+                            id="downloadBtn" 
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-md transition-colors"
+                        >
+                            📥 PNG 다운로드
+                        </button>
+                        <div id="imagePreview" class="border border-gray-300 rounded-md p-2 max-h-64 overflow-auto bg-gray-50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div id="instructions" class="text-center py-12 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p>HTML 코드를 입력하고 "PNG로 변환하기"를 클릭하세요</p>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Hidden render target -->
+    <div id="renderTarget"></div>
+    
+    <!-- Hidden test HTML content -->
+    <script type="text/plain" id="testHtmlContent"><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>규칙적인 운동의 중요성</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl aspect-[16/9] p-8 sm:p-12 flex flex-col overflow-hidden">
+        <header class="text-center mb-6">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 tracking-tight">규칙적인 운동의 중요성</h1>
+            <p class="mt-2 text-lg sm:text-xl text-slate-500">건강한 삶을 위한 최고의 투자</p>
+        </header>
+        <main class="flex-grow flex flex-col md:flex-row gap-8 items-center">
+            <div class="w-full md:w-1/2 h-64 md:h-full">
+                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop" 
+                     alt="공원에서 요가하는 여성" 
+                     class="w-full h-full object-cover rounded-xl shadow-md"
+                     onerror="this.onerror=null;this.src='https://placehold.co/600x400/a7f3d0/1e293b?text=Healthy+Life';">
+            </div>
+            <div class="w-full md:w-1/2 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-emerald-600 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"><\/path><circle cx="12" cy="12" r="3"><\/circle><\/svg>
+                        신체적 건강 증진
+                    </h2>
+                    <ul class="mt-3 list-inside list-disc text-slate-600 space-y-2 text-base sm:text-lg">
+                        <li><span class="font-semibold">체중 관리</span> 및 비만 예방</li>
+                        <li><span class="font-semibold">심혈관 기능 강화</span> (성인병 위험 감소)</li>
+                        <li><span class="font-semibold">면역력 향상</span>으로 질병 예방</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-sky-600 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7"><path d="M12 2a5.5 5.5 0 0 1 5.5 5.5c0 1.63-1.1 3-2.63 3.42a5.5 5.5 0 0 1-8.74 0C4.6 10.5 3.5 9.13 3.5 7.5A5.5 5.5 0 0 1 9 2a3.5 3.5 0 0 1 3 1.02A3.5 3.5 0 0 1 15 2z"><\/path><path d="M12 11.42c-2.22 0-4.33.6-6 1.68a5.5 5.5 0 0 0-3 5.9V22h18v-2.9a5.5 5.5 0 0 0-3-5.9c-1.67-1.08-3.78-1.68-6-1.68z"><\/path><\/svg>
+                        정신적 건강 증진
+                    </h2>
+                    <ul class="mt-3 list-inside list-disc text-slate-600 space-y-2 text-base sm:text-lg">
+                        <li><span class="font-semibold">스트레스 해소</span> 및 긍정적 기분 전환</li>
+                        <li>우울감 및 불안감 감소</li>
+                        <li>성취감을 통한 <span class="font-semibold">자신감 향상</span></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-auto pt-6 text-center">
+            <p class="text-lg italic text-slate-500">"오늘의 작은 움직임이 내일의 건강한 나를 만듭니다."</p>
+        </footer>
+    </div>
+</body>
+</html></script>
+
     <script>
+        const htmlInput = document.getElementById('htmlInput');
+        const previewFrame = document.getElementById('previewFrame');
+        const convertBtn = document.getElementById('convertBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const loadTestBtn = document.getElementById('loadTestBtn');
+        const loading = document.getElementById('loading');
+        const downloadSection = document.getElementById('downloadSection');
+        const instructions = document.getElementById('instructions');
+        const imagePreview = document.getElementById('imagePreview');
+        const widthInput = document.getElementById('widthInput');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const renderTarget = document.getElementById('renderTarget');
+
         let currentCanvas = null;
 
-        function loadSample() {
-            const sample = `<div style="padding: 20px; font-family: Arial;">
-    <h1 style="color: #333;">안녕하세요!</h1>
-    <p style="color: #666;">이것은 HTML to PNG 변환기 테스트입니다.</p>
-    <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
-        <h3 style="color: #0066cc;">특징:</h3>
-        <ul>
-            <li>간단한 HTML 입력</li>
-            <li>실시간 미리보기</li>
-            <li>PNG 다운로드</li>
-        </ul>
-    </div>
-</div>`;
-            document.getElementById('htmlCode').value = sample;
+        // Load test HTML from external file
+        loadTestBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('./test.html');
+                const testHTML = await response.text();
+                htmlInput.value = testHTML;
+                updatePreview();
+            } catch (error) {
+                // Load test.html content directly
+                const fallbackHTML = document.getElementById('testHtmlContent').textContent;
+                htmlInput.value = fallbackHTML;
+                updatePreview();
+            }
+        });
+
+        // Update preview when HTML changes
+        htmlInput.addEventListener('input', debounce(updatePreview, 500));
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
 
-        function clearCode() {
-            document.getElementById('htmlCode').value = '';
-            document.getElementById('preview').innerHTML = '<p style="text-align: center; color: #999; margin-top: 100px;">HTML 코드를 입력하고 \'PNG로 변환\'을 클릭하세요</p>';
-            document.getElementById('downloadBtn').classList.add('hidden');
-            currentCanvas = null;
+        function updatePreview() {
+            const htmlContent = htmlInput.value.trim();
+            if (htmlContent) {
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                previewFrame.src = url;
+                instructions.style.display = 'none';
+            } else {
+                previewFrame.src = '';
+                instructions.style.display = 'block';
+                downloadSection.style.display = 'none';
+            }
         }
 
-        async function convertToPNG() {
-            const htmlCode = document.getElementById('htmlCode').value.trim();
-            
-            if (!htmlCode) {
+        // Convert to PNG
+        convertBtn.addEventListener('click', async () => {
+            const htmlContent = htmlInput.value.trim();
+            if (!htmlContent) {
                 alert('HTML 코드를 입력해주세요.');
                 return;
             }
 
-            const preview = document.getElementById('preview');
-            const loading = document.getElementById('loading');
-            const downloadBtn = document.getElementById('downloadBtn');
-
-            // Show loading
-            loading.classList.remove('hidden');
-            downloadBtn.classList.add('hidden');
-
+            convertBtn.disabled = true;
+            loading.style.display = 'block';
+            downloadSection.style.display = 'none';
+            
             try {
-                // Update preview
-                preview.innerHTML = htmlCode;
+                // Clear previous render
+                renderTarget.innerHTML = '';
                 
-                // Wait for rendering
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                // Convert to canvas
-                const canvas = await html2canvas(preview, {
-                    backgroundColor: '#ffffff',
-                    scale: 2
+                // Create iframe for rendering
+                const iframe = document.createElement('iframe');
+                iframe.style.width = widthInput.value + 'px';
+                iframe.style.height = 'auto';
+                iframe.style.border = 'none';
+                iframe.style.visibility = 'visible';
+                
+                renderTarget.appendChild(iframe);
+                
+                // Wait for iframe to load
+                await new Promise((resolve) => {
+                    iframe.onload = resolve;
+                    iframe.srcdoc = htmlContent;
                 });
 
+                // Wait additional time for content to render
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Get the iframe's document and body
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeBody = iframeDoc.body;
+                
+                if (!iframeBody) {
+                    throw new Error('iframe body not found');
+                }
+
+                // Set proper dimensions
+                const bodyHeight = Math.max(
+                    iframeBody.scrollHeight,
+                    iframeBody.offsetHeight,
+                    iframeDoc.documentElement.scrollHeight,
+                    iframeDoc.documentElement.offsetHeight
+                );
+                
+                iframe.style.height = bodyHeight + 'px';
+                
+                // Wait a bit more for size adjustment
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                const scale = parseFloat(qualitySelect.value);
+                
+                // Capture with html2canvas
+                const canvas = await html2canvas(iframeBody, {
+                    scale: scale,
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff',
+                    width: parseInt(widthInput.value),
+                    height: bodyHeight,
+                    scrollX: 0,
+                    scrollY: 0,
+                    logging: false,
+                    imageTimeout: 15000,
+                    onclone: (clonedDoc) => {
+                        // Ensure all styles are properly applied
+                        const clonedBody = clonedDoc.body;
+                        if (clonedBody) {
+                            clonedBody.style.width = widthInput.value + 'px';
+                            clonedBody.style.margin = '0';
+                            clonedBody.style.padding = '0';
+                        }
+                    }
+                });
+
+                // Clean up iframe
+                renderTarget.removeChild(iframe);
+                
+                // Store canvas globally
                 currentCanvas = canvas;
 
-                // Hide loading, show download
-                loading.classList.add('hidden');
-                downloadBtn.classList.remove('hidden');
-
+                // Show preview
+                const previewImg = document.createElement('img');
+                previewImg.src = canvas.toDataURL('image/png', 1.0);
+                previewImg.style.maxWidth = '100%';
+                previewImg.style.height = 'auto';
+                previewImg.style.border = '1px solid #e5e5e5';
+                previewImg.style.borderRadius = '8px';
+                previewImg.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                
+                imagePreview.innerHTML = '';
+                imagePreview.appendChild(previewImg);
+                
+                downloadSection.style.display = 'block';
+                
+                // Success message
+                const successMsg = document.createElement('p');
+                successMsg.className = 'text-sm text-green-600 mt-2';
+                successMsg.textContent = `✅ 변환 완료! (${canvas.width}x${canvas.height}px)`;
+                imagePreview.appendChild(successMsg);
+                
             } catch (error) {
-                console.error('변환 오류:', error);
-                alert('변환 중 오류가 발생했습니다.');
-                loading.classList.add('hidden');
+                console.error('변환 중 오류 발생:', error);
+                alert('변환 중 오류가 발생했습니다. HTML 코드를 확인하고 다시 시도해주세요.');
+                
+                // Clean up on error
+                renderTarget.innerHTML = '';
+            } finally {
+                loading.style.display = 'none';
+                convertBtn.disabled = false;
             }
-        }
+        });
 
-        function downloadPNG() {
-            if (!currentCanvas) {
-                alert('먼저 PNG로 변환해주세요.');
-                return;
+        // Download PNG
+        downloadBtn.addEventListener('click', () => {
+            if (currentCanvas) {
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                link.download = `html-to-png-${timestamp}.png`;
+                link.href = currentCanvas.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('먼저 HTML을 PNG로 변환해주세요.');
             }
-
-            const link = document.createElement('a');
-            link.download = 'html-to-png.png';
-            link.href = currentCanvas.toDataURL();
-            link.click();
-        }
+        });
     </script>
 </body>
 </html>
