@@ -62,11 +62,11 @@
                     <h2 class="text-xl font-semibold text-gray-800 mb-4">미리보기 및 결과</h2>
                     
                     <!-- Preview Container -->
-                    <div class="border border-gray-300 rounded-lg mb-4 bg-gray-50" style="min-height: 384px;">
+                    <div class="border border-gray-300 rounded-lg mb-4 bg-gray-50" style="min-height: 400px;">
                         <div class="p-4 text-gray-500 text-center h-96 flex items-center justify-center" id="previewPlaceholder">
                             HTML 코드를 입력하고 변환 버튼을 클릭하세요
                         </div>
-                        <div id="previewContent" style="display: none; padding: 16px; width: 100%; aspect-ratio: 16/9; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
+                        <div id="previewContent" style="display: none; padding: 16px; width: 100%; min-height: 350px; overflow: auto;"></div>
                     </div>
 
                     <!-- Download Section -->
@@ -145,8 +145,8 @@
             const targetHeight = 1080;
             
             html2canvas(previewContent, {
-                width: targetWidth,
-                height: targetHeight,
+                useCORS: true,
+                allowTaint: true,
                 scale: 1,
                 backgroundColor: '#ffffff'
             }).then(canvas => {
@@ -160,10 +160,21 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, targetWidth, targetHeight);
                 
-                // Center the content
-                const scale = Math.min(targetWidth / canvas.width, targetHeight / canvas.height);
-                const scaledWidth = canvas.width * scale;
-                const scaledHeight = canvas.height * scale;
+                // Calculate scale to fit content in 16:9 while maintaining aspect ratio
+                const contentAspectRatio = canvas.width / canvas.height;
+                const targetAspectRatio = targetWidth / targetHeight;
+                
+                let scaledWidth, scaledHeight;
+                if (contentAspectRatio > targetAspectRatio) {
+                    // Content is wider - fit to width
+                    scaledWidth = targetWidth * 0.9; // Leave 10% margin
+                    scaledHeight = scaledWidth / contentAspectRatio;
+                } else {
+                    // Content is taller - fit to height
+                    scaledHeight = targetHeight * 0.9; // Leave 10% margin
+                    scaledWidth = scaledHeight * contentAspectRatio;
+                }
+                
                 const x = (targetWidth - scaledWidth) / 2;
                 const y = (targetHeight - scaledHeight) / 2;
                 
@@ -173,6 +184,9 @@
                 link.download = 'html-converted-16x9.png';
                 link.href = finalCanvas.toDataURL();
                 link.click();
+            }).catch(error => {
+                console.error('PNG 생성 오류:', error);
+                alert('PNG 생성 중 오류가 발생했습니다.');
             });
         });
 
