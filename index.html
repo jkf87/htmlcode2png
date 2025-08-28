@@ -50,7 +50,7 @@
                             id="convertBtn"
                             class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors font-semibold ml-auto"
                         >
-                            PNG로 변환
+                            PNG로 변환 (16:9)
                         </button>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                         <div class="p-4 text-gray-500 text-center h-96 flex items-center justify-center" id="previewPlaceholder">
                             HTML 코드를 입력하고 변환 버튼을 클릭하세요
                         </div>
-                        <div id="previewContent" style="display: none; padding: 16px;"></div>
+                        <div id="previewContent" style="display: none; padding: 16px; width: 100%; aspect-ratio: 16/9; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
                     </div>
 
                     <!-- Download Section -->
@@ -140,10 +140,38 @@
 
         // Download PNG
         downloadBtn.addEventListener('click', () => {
-            html2canvas(previewContent).then(canvas => {
+            // Create 16:9 canvas
+            const targetWidth = 1920;
+            const targetHeight = 1080;
+            
+            html2canvas(previewContent, {
+                width: targetWidth,
+                height: targetHeight,
+                scale: 1,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                // Create final 16:9 canvas
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = targetWidth;
+                finalCanvas.height = targetHeight;
+                const ctx = finalCanvas.getContext('2d');
+                
+                // Fill background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, targetWidth, targetHeight);
+                
+                // Center the content
+                const scale = Math.min(targetWidth / canvas.width, targetHeight / canvas.height);
+                const scaledWidth = canvas.width * scale;
+                const scaledHeight = canvas.height * scale;
+                const x = (targetWidth - scaledWidth) / 2;
+                const y = (targetHeight - scaledHeight) / 2;
+                
+                ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
+                
                 const link = document.createElement('a');
-                link.download = 'html-converted.png';
-                link.href = canvas.toDataURL();
+                link.download = 'html-converted-16x9.png';
+                link.href = finalCanvas.toDataURL();
                 link.click();
             });
         });
